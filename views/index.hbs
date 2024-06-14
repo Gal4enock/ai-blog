@@ -1,0 +1,71 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Generate and Edit Text</title>
+    <link
+      rel='stylesheet'
+      href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css'
+    />
+    <style>
+      body { background-color: #f9f9f9; } .CodeMirror { border: 1px solid #ddd;
+      height: auto; } #preview { border: 1px solid #ddd; padding: 10px;
+      margin-top: 10px; } #editor-container { display: none; }
+    </style>
+  </head>
+  <body>
+    <div
+      style='font-family: Arial, sans-serif; margin: 20px; padding: 120px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #f9f9f9; '
+    >
+      <h1>Generate Text</h1>
+      <form action='/generate' method='post'>
+        <label for='description'>Description:</label>
+        <input type='text' id='description' name='description' required />
+        <button type='submit'>Generate</button>
+      </form>
+      {{#if htmlContent}}
+        <h2>Generated Post</h2>
+        {{{htmlContent}}}
+        <button id='editButton'>Edit</button>
+
+        <div id='editor-container'>
+          <form id='contentForm' action='/save-content' method='POST'>
+            <input id='postId' type='hidden' name='postId' value='{{postId}}' />
+            <textarea id='content' name='content' style='display:none;'>
+              {{{htmlContent}}}
+            </textarea>
+            <div id='editor'></div>
+            <br />
+            <button type='submit'>Save</button>
+          </form>
+          <h2>Preview</h2>
+          <div id='preview'></div>
+        </div>
+      {{/if}}
+
+      <script
+        src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js'
+      ></script>
+      <script
+        src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js'
+      ></script>
+      <script>
+        if (document.getElementById("content")) { const editorContainer =
+        document.getElementById("editor-container"); const editButton =
+        document.getElementById("editButton"); const editor =
+        CodeMirror(document.getElementById("editor"), { value:
+        document.getElementById("content").value.trim(), mode: "text/html",
+        lineNumbers: false, }); function updatePreview() { const preview =
+        document.getElementById("preview"); preview.innerHTML =
+        editor.getValue(); } editor.on("change", updatePreview);
+        updatePreview(); editButton.addEventListener("click", function () {
+        editorContainer.style.display = "block"; editButton.style.display =
+        "none"; });
+        document.getElementById("contentForm").addEventListener("submit",
+        function () { document.getElementById("content").value =
+        editor.getValue(); }); }
+      </script>
+    </div>
+  </body>
+</html>
