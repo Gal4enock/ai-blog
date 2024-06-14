@@ -55,9 +55,10 @@ export class AiController {
     type: ResponsePostDto,
   })
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() userPrompt: string): Promise<ResponsePostDto | null> {
+  async create(@Body() userPrompt: string): Promise<ResponsePostDto | null> {
     try {
-      return this.aiService.create(userPrompt);
+      const post = await this.aiService.create(userPrompt);
+      return post;
     } catch (error: any) {
       console.error('Error in creating AI post:', error);
       throw new Error('Failed to create AI post');
@@ -72,11 +73,12 @@ export class AiController {
     description: 'The updated record',
     type: ResponsePostDto,
   })
-  updatePost(
+  async updatePost(
     @Body() updatePostDto: UpdatePostDto,
   ): Promise<ResponsePostDto | null> {
     try {
-      return this.aiService.update(updatePostDto);
+      const updatedPost = await this.aiService.update(updatePostDto);
+      return updatedPost;
     } catch (error: any) {
       console.error('Error in updating AI post:', error);
       throw new Error('Failed to update AI post');
