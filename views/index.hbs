@@ -7,7 +7,6 @@
       rel='stylesheet'
       href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css'
     />
-
     <style>
       body { background-color: #f9f9f9; } .CodeMirror { border: 1px solid #ddd;
       height: auto; } #preview { border: 1px solid #ddd; padding: 10px;
@@ -18,21 +17,23 @@
       padding: 10px 20px; margin: 20px auto; background: linear-gradient(to
       bottom, #999, #fff); color: #333; margin-top: 50px; border: none;
       border-radius: 5px; cursor: pointer; font-size: 16px; text-align: center;
-      text-decoration: none; transition: background-color 0.3s; } .form-info{
-      padding: 8px; margin: 5px; }
+      text-decoration: none; transition: background-color 0.3s; } .form-info {
+      padding: 8px; margin: 5px; } .loader { border: 16px solid #f3f3f3;
+      border-radius: 50%; border-top: 16px solid #7d848a; width: 120px; height:
+      120px; animation: spin 2s linear infinite; display: none; margin: 20px
+      auto; } @keyframes spin { 0% { transform: rotate(0deg); } 100% {
+      transform: rotate(360deg); } }
     </style>
   </head>
   <body>
     <div
-      style=' font-family: Arial, sans-serif; margin: 20px; padding: 120px;
+      style='font-family: Arial, sans-serif; margin: 20px; padding: 120px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #f9f9f9;'
     >
-      <div
-        style='display: flex; align-items: center;
-    flex-direction: column;'
-      >
+      <div style='display: flex; align-items: center; flex-direction: column;'>
         <h1>Generate Blog Post using AI power</h1>
         <form
+          id='generateForm'
           action='/generate'
           method='post'
           style='display: flex; flex-direction: column'
@@ -47,7 +48,7 @@
             cols='40'
             rows='5'
             required
-          /></textarea>
+          ></textarea>
           <label class='form-info' for='additional'>Additional information:</label>
           <textarea
             class='form-info'
@@ -57,10 +58,9 @@
             cols='40'
             rows='5'
           ></textarea>
-
-
           <button class='button' type='submit'>Generate</button>
         </form>
+        <div id='loader' class='loader'></div>
       </div>
       {{#if htmlContent}}
         <div id='generated-content'>
@@ -74,7 +74,6 @@
               <img src='/placeholder.png' alt='Placeholder Image' />
             </div>
           {{/if}}
-
           <div class='text-content'>
             {{{htmlContent}}}
           </div>
@@ -93,14 +92,15 @@
           <input id='postId' type='hidden' name='postId' value='{{postId}}' />
           <input id='image' type='hidden' name='image' value='{{image}}' />
         </form>
-
         <div id='editor-container' style='display:none;'>
           <form id='contentForm' action='/save-content' method='POST'>
             <input id='postId' type='hidden' name='postId' value='{{postId}}' />
             <input id='image' type='hidden' name='image' value='{{image}}' />
-            <textarea id='content' name='content' style='display:none;'>
-              {{{htmlContent}}}
-            </textarea>
+            <textarea
+              id='content'
+              name='content'
+              style='display:none;'
+            >{{{htmlContent}}}</textarea>
             <div id='editor'></div>
             <br />
             <button class='button' type='submit'>Save</button>
@@ -109,7 +109,6 @@
           <div id='preview'></div>
         </div>
       {{/if}}
-
       <script
         src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js'
       ></script>
@@ -128,16 +127,19 @@
         document.getElementById("preview"); preview.innerHTML =
         editor.getValue(); } editor.on("change", updatePreview);
         updatePreview(); editButton.addEventListener("click", function () {
-        editorContainer.style.display = "block"; editButton.style.display
-        ="none"; regenerateButton.style.display="block"; editor.focus();
+        editorContainer.style.display = "block"; editButton.style.display =
+        "none"; regenerateButton.style.display = "block"; editor.focus();
         editor.setOption("theme", "default"); editor.refresh();
-        editor.execCommand("goDocStart");});
+        editor.execCommand("goDocStart"); });
         regenerateButton.addEventListener("click", function () {
         regenerateButton.textContent = 'Regenerating...';
         regenerateForm.submit(); });
         document.getElementById("contentForm").addEventListener("submit",
         function () { document.getElementById("content").value =
-        editor.getValue(); }); }
+        editor.getValue(); }); } // Show loader when the form is submitted
+        document.getElementById("generateForm").addEventListener("submit",
+        function() { document.getElementById("loader").style.display = "block";
+        });
       </script>
     </div>
   </body>

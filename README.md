@@ -24,7 +24,7 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Welcome to our application for creating and editing text and images using AI. Generate informative blog posts effortlessly and edit content seamlessly with our intuitive interface. Unlock endless creative possibilities with our tool!.
 
 ## Installation
 
@@ -80,9 +80,9 @@ $ npm run start:prod
 
 - Open your web browser and navigate to [http://localhost:3331/api](http://localhost:3331/api).
 
-## Support
+## Video
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+[Video Presentation](https://www.awesomescreenshot.com/video/28711236?key=5b5efa3a95b0a8da16f2675f6f101cde) Click to open a video presentation
 
 ## License
 
