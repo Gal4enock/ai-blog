@@ -10,6 +10,9 @@ export class Post {
 
   @Prop()
   text: string;
+
+  @Prop()
+  description: string;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

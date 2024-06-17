@@ -1,28 +1,50 @@
 /**
- * Controller for rendering the front-end part of the application.
+ * Controller responsible for handling web endpoints related to AI blog operations.
  *
- * This controller handles HTTP requests for rendering and processing data on the front-end.
- * It utilizes decorators from the '@nestjs/common' library to define routes and their corresponding
- * handlers. The controller integrates with the AI service through the `AiController` to generate and
- * update posts based on user input. This class is excluded from the Swagger documentation using
- * the `@ApiExcludeEndpoint` decorator, as it is intended solely for rendering the front-end part of the application.
+ * This controller manages routes for generating text content based on user input,
+ * saving generated content updates, and regenerating images associated with blog posts.
+ * It interacts with the AiController to delegate specific business logic tasks related
+ * to creating and updating blog posts using AI services.
  *
  * @class AppController
  *
- * @constructor - Initializes the controller with a dependency on `AiController`.
+ * @constructor Initializes the controller with a dependency on `AiController`.
  *
- * @method root - Handles GET requests to the root URL and renders the 'index' view.
+ * @method root Handles GET requests to the root URL ('/').
+ *             Renders the 'index' template.
  *
- * @method generateText - Handles POST requests to the '/generate' URL.
- *                        It generates text based on the user's description and renders the 'index' view with the generated content.
+ * @method generateText Handles POST requests to '/generate'.
+ *                     Calls the 'create' method of `AiController` to generate a new blog post
+ *                     based on the provided 'description'. Returns the generated HTML content,
+ *                     post ID, and associated image.
  *
- * @method saveContent - Handles POST requests to the '/save-content' URL.
- *                       It saves the updated content of a post and renders the 'index' view with the saved content.
+ * @param description - The user-provided description used for generating blog content.
  *
- * @param description - The description provided by the user for generating text.
- * @param postId - The unique identifier of the post.
- * @param content - The updated content of the post.
- */
+ * @returns An object containing HTML content, post ID, and associated image.
+ *
+ * @method saveContent Handles POST requests to '/save-content'.
+ *                    Calls the 'updatePost' method of `AiController` to update an existing blog post
+ *                    identified by 'postId' with new 'content'. Returns the updated HTML content,
+ *                    post ID, and associated image.
+ *
+ * @param postId - The ID of the post to update.
+ * @param content - The updated content for the post.
+ *
+ * @returns An object containing updated HTML content, post ID, and associated image.
+ *
+ * @method regenerateImage Handles POST requests to '/regenerate-image'.
+ *                        Calls the 'updatePost' method of `AiController` to update an existing blog post
+ *                        identified by 'postId' with a new 'image'. Returns the updated HTML content,
+ *                        post ID, and updated image.
+ *
+ * @param postId - The ID of the post to update.
+ * @param image - The new image URL or data for the post.
+ *
+ * @returns An object containing updated HTML content, post ID, and updated image.
+ *
+ * @throws Error - Throws an error if any operation fails during text generation, content saving,
+ *                or image regeneration.
+ *  */
 
 import { Body, Controller, Get, Post, Render, Res } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
@@ -46,11 +68,17 @@ export class AppController {
   async generateText(@Body('description') description: string) {
     try {
       const result = await this.aiController.create(description);
-
-      return { htmlContent: result?.text, postId: result?._id };
+      if (!result) {
+        throw new Error('No generated post');
+      }
+      return {
+        htmlContent: result.text,
+        postId: result._id,
+        image: result.image,
+      };
     } catch (error: any) {
       console.error('Error in generating text:', error);
-      return { htmlContent: '', postId: '' };
+      return { htmlContent: '', postId: '', image: '' };
     }
   }
 
@@ -67,10 +95,30 @@ export class AppController {
         id: postId,
         text: content,
       });
-      return { htmlContent: post?.text, postId: post?._id };
+      return { htmlContent: post?.text, postId: post?._id, image: post?.image };
     } catch (error: any) {
       console.error('Error in saving content:', error);
-      return { htmlContent: '', postId: '' };
+      return { htmlContent: '', postId: '', image: '' };
+    }
+  }
+
+  @Post('regenerate-image')
+  @Render('index')
+  @ApiExcludeEndpoint()
+  async regenerateImage(
+    @Body('postId') postId: string,
+    @Body('image') image: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const post = await this.aiController.updatePost({
+        id: postId,
+        image: image,
+      });
+      return { htmlContent: post?.text, postId: post?._id, image: post?.image };
+    } catch (error: any) {
+      console.error('Error in saving content:', error);
+      return { htmlContent: '', postId: '', image: '' };
     }
   }
 }

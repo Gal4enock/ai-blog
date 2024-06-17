@@ -22,8 +22,8 @@
  *                 It must be a string (only in ResponsePostDto).
  */
 
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreatePostDto {
   @ApiProperty({
@@ -39,8 +39,32 @@ export class CreatePostDto {
   @IsString()
   readonly text: string;
 }
-export class UpdatePostDto extends CreatePostDto {
-  id: string;
+export class UpdatePostDto extends PartialType(CreatePostDto) {
+  @ApiProperty({
+    description: 'ID of the post',
+    example: '60e7cda5b0a7f203a08e8b8b',
+  })
+  @IsString()
+  @IsOptional()
+  readonly id?: string;
+
+  @ApiProperty({
+    description: 'Updated URL of the image associated with the post',
+    example: 'http://example.com/new-image.jpg',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  readonly image?: string;
+
+  @ApiProperty({
+    description: 'Updated text content of the post',
+    example: 'This is an updated sample post.',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  readonly text?: string;
 }
 
 export class ResponsePostDto extends CreatePostDto {

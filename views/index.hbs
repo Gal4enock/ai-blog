@@ -7,37 +7,74 @@
       rel='stylesheet'
       href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css'
     />
+
     <style>
       body { background-color: #f9f9f9; } .CodeMirror { border: 1px solid #ddd;
       height: auto; } #preview { border: 1px solid #ddd; padding: 10px;
       margin-top: 10px; } #editor-container { display: none; }
+      #generated-content { display: flex; flex-direction: column; align-items:
+      center; } #generated-content img { width: 100%; } #generated-content
+      .text-content { width: 100%; } .button { display: block; width: 200px;
+      padding: 10px 20px; margin: 20px auto; background: linear-gradient(to
+      bottom, #999, #fff); color: #333; margin-top: 50px; border: none;
+      border-radius: 5px; cursor: pointer; font-size: 16px; text-align: center;
+      text-decoration: none; transition: background-color 0.3s; }
     </style>
   </head>
   <body>
     <div
-      style='font-family: Arial, sans-serif; margin: 20px; padding: 120px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #f9f9f9; '
+      style=' font-family: Arial, sans-serif; margin: 20px; padding: 120px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #f9f9f9;'
     >
-      <h1>Generate Text</h1>
-      <form action='/generate' method='post'>
-        <label for='description'>Description:</label>
-        <input type='text' id='description' name='description' required />
-        <button type='submit'>Generate</button>
-      </form>
+      <div
+        style=' display: flex; align-items: center;
+    flex-direction: column;'
+      >
+        <h1>Generate Blog Post using AI power</h1>
+        <form action='/generate' method='post'>
+          <label for='description'>Description:</label>
+          <input type='text' id='description' name='description' required />
+          <button class='button' type='submit'>Generate</button>
+        </form>
+      </div>
       {{#if htmlContent}}
-        <h2>Generated Post</h2>
-        {{{htmlContent}}}
-        <button id='editButton'>Edit</button>
+        <div id='generated-content'>
+          <h2>Generated Post</h2>
+          {{#if image}}
+            <div style='display: flex; justify-content: center;'>
+              <img src='{{image}}' alt='Generated Image' />
+            </div>
+          {{/if}}
 
-        <div id='editor-container'>
+          <div class='text-content'>
+            {{{htmlContent}}}
+          </div>
+        </div>
+        <button class='button' id='editButton'>Edit Post</button>
+        <button
+          style='display: none; margin-right: auto; margin-bottom: 20px; border-radius: 6px; padding: 5px'
+          id='regenerateButton'
+        >Regenerate Image</button>
+        <form
+          id='regenerateForm'
+          action='/regenerate-image'
+          method='post'
+          style='display: none;'
+        >
+          <input id='postId' type='hidden' name='postId' value='{{postId}}' />
+          <input id='image' type='hidden' name='image' value='{{image}}' />
+        </form>
+
+        <div id='editor-container' style='display:none;'>
           <form id='contentForm' action='/save-content' method='POST'>
             <input id='postId' type='hidden' name='postId' value='{{postId}}' />
+            <input id='image' type='hidden' name='image' value='{{image}}' />
             <textarea id='content' name='content' style='display:none;'>
               {{{htmlContent}}}
             </textarea>
             <div id='editor'></div>
             <br />
-            <button type='submit'>Save</button>
+            <button class='button' type='submit'>Save</button>
           </form>
           <h2>Preview</h2>
           <div id='preview'></div>
@@ -53,15 +90,22 @@
       <script>
         if (document.getElementById("content")) { const editorContainer =
         document.getElementById("editor-container"); const editButton =
-        document.getElementById("editButton"); const editor =
+        document.getElementById("editButton"); const regenerateButton =
+        document.getElementById("regenerateButton"); const regenerateForm =
+        document.getElementById("regenerateForm"); const editor =
         CodeMirror(document.getElementById("editor"), { value:
         document.getElementById("content").value.trim(), mode: "text/html",
         lineNumbers: false, }); function updatePreview() { const preview =
         document.getElementById("preview"); preview.innerHTML =
         editor.getValue(); } editor.on("change", updatePreview);
         updatePreview(); editButton.addEventListener("click", function () {
-        editorContainer.style.display = "block"; editButton.style.display =
-        "none"; });
+        editorContainer.style.display = "block"; editButton.style.display
+        ="none"; regenerateButton.style.display="block"; editor.focus();
+        editor.setOption("theme", "default"); editor.refresh();
+        editor.execCommand("goDocStart");});
+        regenerateButton.addEventListener("click", function () {
+        regenerateButton.textContent = 'Regenerating...';
+        regenerateForm.submit(); });
         document.getElementById("contentForm").addEventListener("submit",
         function () { document.getElementById("content").value =
         editor.getValue(); }); }
