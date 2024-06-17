@@ -12,14 +12,21 @@
  *                        It must be a non-empty string.
  */
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class BasicMessageDto {
   @ApiProperty({
     description: 'Text content of the post',
-    example: 'I want a post about kittens',
+    example: 'Online marketplace and hospitality services',
   })
   @IsNotEmpty()
   @IsString()
   userPrompt: string;
+  @ApiProperty({
+    description: 'Text to add some specific info to post',
+    example: 'Slogan: Belong anywhere with My Trevel Company.',
+  })
+  @IsString()
+  @IsOptional()
+  additionalPrompt: string;
 }

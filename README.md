@@ -54,13 +54,21 @@ $ npm run start:prod
 
 2. **Generate Blog Post:**
 
-   - On the main page, you will see an input field labeled "Description".
-   - Enter a topic for your blog post in the input field and click the "Generate" button.
+   - On the main page, you will see inputs fields labeled "Description" and "Additional information".
+   - Enter the main information or topic for your blog post in the "Description" input field.
+   - If you need to provide specific or additional information, please add it to the "Additional Information" field. To achieve better results, include a name for this information. For example:
+
+   ```bash
+    "Slogan: Belong anywhere with My Travel Company."
+   ```
+
+   - Click the "Generate" button.
    - The generated blog post will be displayed below the form.
 
 3. **Edit Blog Post:**
 
    - After generating the blog post, click the "Edit" button to open the editor.
+   - You will see a "Regenerate Image" button — click it if you want another picture.
    - Use the editor to make any necessary changes to the blog post.
    - Click the "Save" button to save your changes.
 

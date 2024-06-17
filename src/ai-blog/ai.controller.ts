@@ -55,9 +55,13 @@ export class AiController {
     type: ResponsePostDto,
   })
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() userPrompt: string): Promise<ResponsePostDto | null> {
+  async create(
+    @Body() blogPrompt: BasicMessageDto,
+  ): Promise<ResponsePostDto | null> {
     try {
-      const post = await this.aiService.create(userPrompt);
+      const { userPrompt, additionalPrompt } = blogPrompt;
+
+      const post = await this.aiService.create(userPrompt, additionalPrompt);
       return post;
     } catch (error: any) {
       console.error('Error in creating AI post:', error);

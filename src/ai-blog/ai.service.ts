@@ -24,7 +24,7 @@
  *
  * @method generateAiImage - Generates an image based on the provided user prompt using the Dall-E model.
  *
- * @method generateTextByUserDescription - Generates text based on the user's description using
+ * @method generateTextByUserDescription - Generates text based on the user's description and additional information using
  *                                         the OpenAI model and a prompt template.
  *
  * @param description - The description provided by the user for generating text.
@@ -75,9 +75,15 @@ export class AiService {
     };
   }
 
-  public async create(description: string): Promise<ResponsePostDto> {
+  public async create(
+    description: string,
+    additionalDescription?: string,
+  ): Promise<ResponsePostDto> {
     const postImage = await this.generateAiImage(description);
-    const postText = await this.generateTextByUserDescription(description);
+    const postText = await this.generateTextByUserDescription(
+      description,
+      additionalDescription,
+    );
     const newPost = new this.postModel({
       text: postText.response,
       image: postImage,
@@ -106,8 +112,6 @@ export class AiService {
   }
 
   public async generateAiImage(description: string) {
-    console.log(description);
-
     try {
       const imagePrompt = PromptTemplate.fromTemplate(`
       Based on the following user ${description}, you need to generate a main photo for the blog post. It should be a realistic image or photo. Make sure not to include the title of the blog post in the image. The image should be a visual representation of the blog post's content and theme.
@@ -119,18 +123,21 @@ export class AiService {
       throw new Error(error);
     }
   }
-  public async generateTextByUserDescription(description: string) {
+  public async generateTextByUserDescription(
+    description: string,
+    additionalDescription?: string,
+  ) {
     try {
       const prompt = ChatPromptTemplate.fromMessages([
         [
           'system',
-          `Based on the following description - generate a blog post in HTML format with HTML text markup tags to incert in <body>.
+          `Based on the following description and ${additionalDescription} - generate a big blog post in HTML format with HTML text markup tags to incert in <body>.
           The generated blog post should be modern, contain multiple paragraphs, lists etc,
-          and be very good styled in be styled in HTML format. Blog Post should be 1500-2000 words length. Use inline css for it looks better.`,
+          and be very good styled in HTML format. Blog Post should be 1500-2000 words length. Use inline css for it looks better.`,
         ],
         [
           'system',
-          'Post should be 1500-2000 words length in HTML format wothout head tags',
+          'Post should be minimum 1500-2000 words length in HTML format wothout head tags',
         ],
         [
           'system',

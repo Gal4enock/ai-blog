@@ -18,7 +18,8 @@
       padding: 10px 20px; margin: 20px auto; background: linear-gradient(to
       bottom, #999, #fff); color: #333; margin-top: 50px; border: none;
       border-radius: 5px; cursor: pointer; font-size: 16px; text-align: center;
-      text-decoration: none; transition: background-color 0.3s; }
+      text-decoration: none; transition: background-color 0.3s; } .form-info{
+      padding: 8px; margin: 5px; }
     </style>
   </head>
   <body>
@@ -27,13 +28,37 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #f9f9f9;'
     >
       <div
-        style=' display: flex; align-items: center;
+        style='display: flex; align-items: center;
     flex-direction: column;'
       >
         <h1>Generate Blog Post using AI power</h1>
-        <form action='/generate' method='post'>
-          <label for='description'>Description:</label>
-          <input type='text' id='description' name='description' required />
+        <form
+          action='/generate'
+          method='post'
+          style='display: flex; flex-direction: column'
+        >
+          <label class='form-info' for='description'>Description:</label>
+          <textarea
+            class='form-info'
+            type='text'
+            id='description'
+            name='description'
+            placeholder='Main description'
+            cols='40'
+            rows='5'
+            required
+          /></textarea>
+          <label class='form-info' for='additional'>Additional information:</label>
+          <textarea
+            class='form-info'
+            name='additional'
+            id='additional'
+            placeholder='Additional information'
+            cols='40'
+            rows='5'
+          ></textarea>
+
+
           <button class='button' type='submit'>Generate</button>
         </form>
       </div>
@@ -43,6 +68,10 @@
           {{#if image}}
             <div style='display: flex; justify-content: center;'>
               <img src='{{image}}' alt='Generated Image' />
+            </div>
+          {{else}}
+            <div style='display: flex; justify-content: center;'>
+              <img src='/placeholder.png' alt='Placeholder Image' />
             </div>
           {{/if}}
 

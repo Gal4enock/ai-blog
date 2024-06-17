@@ -65,9 +65,15 @@ export class AppController {
   @Post('generate')
   @Render('index')
   @ApiExcludeEndpoint()
-  async generateText(@Body('description') description: string) {
+  async generateText(
+    @Body('description') description: string,
+    @Body('additional') additional: string,
+  ) {
     try {
-      const result = await this.aiController.create(description);
+      const result = await this.aiController.create({
+        userPrompt: description,
+        additionalPrompt: additional,
+      });
       if (!result) {
         throw new Error('No generated post');
       }
