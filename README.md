@@ -62,6 +62,7 @@ $ npm run start:prod
     "Slogan: Belong anywhere with My Travel Company."
    ```
 
+   - Choose an appropriate post size from the dropdown menu
    - Click the "Generate" button.
    - The generated blog post will be displayed below the form.
 

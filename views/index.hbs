@@ -27,8 +27,8 @@
   </head>
   <body>
     <div
-      style='font-family: Arial, sans-serif; margin: 20px; padding: 120px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #f9f9f9;'
+      style='font-family: Arial, sans-serif; margin: 0 auto; padding: 120px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); background-color: #f9f9f9; max-width: 800px'
     >
       <div style='display: flex; align-items: center; flex-direction: column;'>
         <h1>Generate Blog Post using AI power</h1>
@@ -58,6 +58,20 @@
             cols='40'
             rows='5'
           ></textarea>
+          <!-- Article Length Selector -->
+          <label class='form-info' for='articleLength'>Article length:</label>
+          <select
+            class='form-info'
+            id='articleLength'
+            name='articleLength'
+            required
+          >
+            <option value='4'>4-5 headings (500 - 1000 words)</option>
+            <option value='5'>5-6 headings (1000 - 2000 words)</option>
+            <option value='6'>6-7 headings (2000 - 3000 words)</option>
+            <option value='8'>7-8 headings (3000 - 4000 words)</option>
+            <option value='10'>9-10 headings (4000 - 5000 words)</option>
+          </select>
           <button class='button' type='submit'>Generate</button>
         </form>
         <div id='loader' class='loader'></div>

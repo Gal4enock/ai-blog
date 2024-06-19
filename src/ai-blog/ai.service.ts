@@ -38,9 +38,18 @@
 import { Injectable } from '@nestjs/common';
 import { ChatOpenAI } from '@langchain/openai';
 import { DallEAPIWrapper } from '@langchain/openai';
-import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
+import {
+  ChatPromptTemplate,
+  PromptTemplate,
+  MessagesPlaceholder,
+} from '@langchain/core/prompts';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import {
+  RunnableConfig,
+  RunnableWithMessageHistory,
+} from '@langchain/core/runnables';
+import { ChatMessageHistory } from '@langchain/community/stores/message/in_memory';
 
 import { ResponsePostDto, UpdatePostDto } from './dto/ai-post.dto';
 import { Post, PostDocument } from './schemas/post.schema';
@@ -55,7 +64,8 @@ export class AiService {
   constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {
     this.openAI = new ChatOpenAI({
       openAIApiKey: this.openAIkey,
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o',
+      temperature: 1,
     });
 
     this.openAIImage = new DallEAPIWrapper({
@@ -77,11 +87,13 @@ export class AiService {
 
   public async create(
     description: string,
+    articleLength: string,
     additionalDescription?: string,
   ): Promise<ResponsePostDto> {
     const postImage = await this.generateAiImage(description);
     const postText = await this.generateTextByUserDescription(
       description,
+      articleLength,
       additionalDescription,
     );
     const newPost = new this.postModel({
@@ -113,9 +125,9 @@ export class AiService {
 
   public async generateAiImage(description: string) {
     try {
-      const imagePrompt = PromptTemplate.fromTemplate(`
-      Based on the following user ${description}, you need to generate a main photo for the blog post. It should be a realistic image or photo. Make sure not to include the title of the blog post in the image. The image should be a visual representation of the blog post's content and theme.
-        `);
+      const imagePrompt = PromptTemplate.fromTemplate(
+        `Generate a main realistic photo for the blog post, based on the following user description: "${description}". The image must be a realistic photo, not an illustration, drawing, or computer-generated graphic. Ensure the photo visually represents the blog post's content and theme.`,
+      );
       const prompt = await imagePrompt.format({ description });
       const image_url = await this.openAIImage.invoke(prompt);
       return image_url;
@@ -125,41 +137,70 @@ export class AiService {
   }
   public async generateTextByUserDescription(
     description: string,
+    articleLength: string,
     additionalDescription?: string,
   ) {
+    const headings = Number(articleLength);
     try {
       const prompt = ChatPromptTemplate.fromMessages([
         [
           'system',
-          `Based on the following description and ${additionalDescription} - generate a big blog post in HTML format with HTML text markup tags to incert in <body>.
-          The generated blog post should be modern, contain multiple paragraphs, lists etc,
-          and be very good styled in HTML format. Blog Post should be 1500-2000 words length. Use inline css for it looks better.`,
+          `Based on the following description and ${additionalDescription}, write a professional blog for business Journal post in HTML format with HTML text markup tags to insert in the <body> section.
+          The generated blog post should be modern, contain multiple paragraphs, lists, etc., and be well-styled in HTML format. Use inline CSS for a better appearance.  The post should look like a scientific article.`,
         ],
         [
           'system',
-          'Post should be minimum 1500-2000 words length in HTML format wothout head tags',
+          'The post should be at least 2000 words in length in HTML format without head tags.All Blog text should be black. h2 text - "font-weight: bold". Blog main text should have "font-size: 18px; color: black; line-height: 1.6; font-family: Arial, sans-serif;"',
         ],
         [
           'system',
-          'Do not explain yourself, just give answer to the question.',
+          'Do not explain yourself, just give the answer to the question.',
         ],
         [
           'system',
-          'Do not use body, html, DOCTYPE html tags. Only tags for markup',
+          'Do not use body, html, or DOCTYPE html tags. Only use tags for markup.',
         ],
-        ['system', 'Use some inline css for it looks better.'],
-        ['user', '{input}'],
+        ['system', 'Use inline CSS for better appearance.'],
+        new MessagesPlaceholder('history'),
+        ['human', '{input}'],
       ]);
 
-      const chain = prompt.pipe(this.openAI);
+      const runnable = prompt.pipe(this.openAI);
+      // Define your session history store.
+      const messageHistory = new ChatMessageHistory();
 
-      const result = await chain.invoke({
-        input: description,
+      const withHistory = new RunnableWithMessageHistory({
+        runnable,
+        getMessageHistory: (_sessionId: string) => messageHistory,
+        inputMessagesKey: 'input',
+        // This shows the runnable where to insert the history.
+        historyMessagesKey: 'history',
       });
-      const AIResponse = result.content.toString();
+      const config: RunnableConfig = { configurable: { sessionId: '1' } };
+
+      let fullArticle = '';
+
+      async function invokeWithHistory(inputText: string) {
+        let output = await withHistory.invoke({ input: inputText }, config);
+        return output.content;
+      }
+
+      fullArticle += await invokeWithHistory(
+        `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. Use HTML tags and inline CSS for styling.`,
+      );
+
+      for (let i = 0; i <= headings - 2; i += 2) {
+        fullArticle += await invokeWithHistory(
+          `Do not repeat the previous part, just write the middle sections (800 -1000 words) with two headings as a continuation of the previous post on the topic: ${description}. Use the same HTML tags and inline CSS for styling.`,
+        );
+      }
+
+      fullArticle += await invokeWithHistory(
+        `Do not repeat the previous part, just write the references section as links a list (<ul><li><li/><ul/>) in the Vancouver style. Include links from the internet, from where you took an information and that have similar posts or information relevant to the previous content.`,
+      );
 
       return {
-        response: AIResponse,
+        response: fullArticle,
       };
     } catch (error: any) {
       throw new Error(error.message);

@@ -19,6 +19,8 @@
  *                     post ID, and associated image.
  *
  * @param description - The user-provided description used for generating blog content.
+ * @param additional - The user-provided additional data used for generating blog content.
+ * @param articleLength - The user-provided article length used for a size of a blog content.
  *
  * @returns An object containing HTML content, post ID, and associated image.
  *
@@ -68,11 +70,13 @@ export class AppController {
   async generateText(
     @Body('description') description: string,
     @Body('additional') additional: string,
+    @Body('articleLength') articleLength: string,
   ) {
     try {
       const result = await this.aiController.create({
         userPrompt: description,
         additionalPrompt: additional,
+        articleLength,
       });
       if (!result) {
         throw new Error('No generated post');
