@@ -55,7 +55,8 @@ export class AiService {
   constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {
     this.openAI = new ChatOpenAI({
       openAIApiKey: this.openAIkey,
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o',
+      temperature: 1,
     });
 
     this.openAIImage = new DallEAPIWrapper({
@@ -79,14 +80,15 @@ export class AiService {
     description: string,
     additionalDescription?: string,
   ): Promise<ResponsePostDto> {
-    const postImage = await this.generateAiImage(description);
+    // const postImage = await this.generateAiImage(description);
     const postText = await this.generateTextByUserDescription(
       description,
       additionalDescription,
     );
     const newPost = new this.postModel({
       text: postText.response,
-      image: postImage,
+      image:
+        'https://oaidalleapiprodscus.blob.core.windows.net/private/org-LORzMiTprZXrpqAURZlW3wGi/user-XC9g35RLbkFcklRoNpOivFLg/img-L91yynTa1Rf9oXz5nZEtoyzs.png?st=2024-06-18T11%3A13%3A16Z&se=2024-06-18T13%3A13%3A16Z&sp=r&sv=2023-11-03&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-06-17T19%3A26%3A47Z&ske=2024-06-18T19%3A26%3A47Z&sks=b&skv=2023-11-03&sig=uICqmTyGd48N8AXbnWhsvIdraMdGtrkEW2iG5hpuTp4%3D',
       description,
     });
     const savedPost = await newPost.save();
@@ -114,7 +116,7 @@ export class AiService {
   public async generateAiImage(description: string) {
     try {
       const imagePrompt = PromptTemplate.fromTemplate(`
-      Based on the following user ${description}, you need to generate a main photo for the blog post. It should be a realistic image or photo. Make sure not to include the title of the blog post in the image. The image should be a visual representation of the blog post's content and theme.
+      Based on the following user ${description}, you need to generate a main realistic photo for the blog post. It must be a realistic photo only, no pictures. The photo should be a visual representation of the blog post's content and theme.
         `);
       const prompt = await imagePrompt.format({ description });
       const image_url = await this.openAIImage.invoke(prompt);
@@ -131,32 +133,54 @@ export class AiService {
       const prompt = ChatPromptTemplate.fromMessages([
         [
           'system',
-          `Based on the following description and ${additionalDescription} - generate a big blog post in HTML format with HTML text markup tags to incert in <body>.
-          The generated blog post should be modern, contain multiple paragraphs, lists etc,
-          and be very good styled in HTML format. Blog Post should be 1500-2000 words length. Use inline css for it looks better.`,
+          `Based on the following description and ${additionalDescription}, write a professional blog post in HTML format with HTML text markup tags to insert in the <body> section.
+          The generated blog post should be modern, contain multiple paragraphs, lists, etc., and be well-styled in HTML format. Use inline CSS for a better appearance. Include references as a link in the Vancouver style at the end of the post. Add links from the internet that have similar posts or information. The post should look like a scientific article with 5 headings and be 2000 words in length.`,
         ],
         [
           'system',
-          'Post should be minimum 1500-2000 words length in HTML format wothout head tags',
+          'The post should be at least 2000 words in length in HTML format without head tags.All Blog text should be black. h2 text - "font-weight: bold". Blog main text should have "font-size: 18px; color: black; line-height: 1.6; font-family: Arial, sans-serif;"',
         ],
         [
           'system',
-          'Do not explain yourself, just give answer to the question.',
+          'Do not explain yourself, just give the answer to the question.',
         ],
         [
           'system',
-          'Do not use body, html, DOCTYPE html tags. Only tags for markup',
+          'Do not use body, html, or DOCTYPE html tags. Only use tags for markup.',
         ],
-        ['system', 'Use some inline css for it looks better.'],
-        ['user', '{input}'],
+        ['system', 'Use some inline CSS for better appearance.'],
+        [
+          'user',
+          `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. Use HTML tags and inline CSS for styling.`,
+        ],
       ]);
 
       const chain = prompt.pipe(this.openAI);
 
-      const result = await chain.invoke({
-        input: description,
+      // Get the result for the first part
+      let result = await chain.invoke({
+        input: `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. Use HTML tags and inline CSS for styling.`,
       });
-      const AIResponse = result.content.toString();
+      let AIResponse = result.content.toString();
+
+      // Append the result for the next parts
+      result = await chain.invoke({
+        input: `Write the main sections (800-1000 words) as a continuation of the previous post on the topic: ${description}. Use the same HTML tags and inline CSS for styling.`,
+      });
+      AIResponse += result.content.toString();
+
+      result = await chain.invoke({
+        input: `Write the conclusion and final thoughts (400-500 words) for the previous post on the topic: ${description}. Write only the conclusion and final thoughts, do not repeat previous parts. Use the same HTML tags and inline CSS for styling.`,
+      });
+      AIResponse += result.content.toString();
+
+      result = await chain.invoke({
+        input: `For previous post write a list (<ul><li><li/><ul/>) of references as links in that style -[1] - https://www.bankrate.com/real-estate/renting-an-apartment-pros-and-cons/.. Include links from the internet that have similar posts or information relevant to the previous content.`,
+      });
+      console.log('====================================');
+      console.log(result.content.toString());
+      console.log('====================================');
+      AIResponse += result.content.toString();
 
       return {
         response: AIResponse,
