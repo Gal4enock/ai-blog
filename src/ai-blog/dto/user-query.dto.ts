@@ -1,18 +1,30 @@
 /**
- * Data Transfer Object for basic message processing.
+ * Data Transfer Object (DTO) for basic message processing.
  *
- * This class defines the data structure and validation rules for handling a basic
- * user query. It utilizes decorators from the 'class-validator' library to enforce
- * validation constraints on the data received from client requests. This ensures
- * that the user query adheres to the expected format and content requirements.
+ * This class defines the structure and validation rules for handling a basic
+ * user query related to message processing. It ensures that the data received
+ * from client requests adheres to specific format and content requirements.
+ * The DTO uses decorators from the 'class-validator' library for validation.
  *
  * @class BasicMessageDto
  *
- * @property userPrompt - The query string provided by the user.
- *                        It must be a non-empty string.
+ * @property {string} userPrompt - The main query string provided by the user.
+ *                                 It must be a non-empty string.
+ * @property {string} [additionalPrompt] - Optional additional text provided by the user.
+ * @property {string} [articleLength] - Optional enumeration representing the desired
+ *                                      length of an article, defined by values in the
+ *                                      ArticleLength enum.
  */
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+export enum ArticleLength {
+  SHORT = '4',
+  MEDIUM = '5',
+  LONG = '6',
+  EXTRA_LONG = '8',
+  ULTRA_LONG = '10',
+}
 
 export class BasicMessageDto {
   @ApiProperty({
@@ -29,4 +41,10 @@ export class BasicMessageDto {
   @IsString()
   @IsOptional()
   additionalPrompt: string;
+
+  @ApiProperty({
+    enum: ArticleLength,
+  })
+  @IsOptional()
+  articleLength: string;
 }

@@ -38,9 +38,18 @@
 import { Injectable } from '@nestjs/common';
 import { ChatOpenAI } from '@langchain/openai';
 import { DallEAPIWrapper } from '@langchain/openai';
-import { ChatPromptTemplate, PromptTemplate } from '@langchain/core/prompts';
+import {
+  ChatPromptTemplate,
+  PromptTemplate,
+  MessagesPlaceholder,
+} from '@langchain/core/prompts';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import {
+  RunnableConfig,
+  RunnableWithMessageHistory,
+} from '@langchain/core/runnables';
+import { ChatMessageHistory } from '@langchain/community/stores/message/in_memory';
 
 import { ResponsePostDto, UpdatePostDto } from './dto/ai-post.dto';
 import { Post, PostDocument } from './schemas/post.schema';
@@ -78,17 +87,18 @@ export class AiService {
 
   public async create(
     description: string,
+    articleLength: string,
     additionalDescription?: string,
   ): Promise<ResponsePostDto> {
-    // const postImage = await this.generateAiImage(description);
+    const postImage = await this.generateAiImage(description);
     const postText = await this.generateTextByUserDescription(
       description,
+      articleLength,
       additionalDescription,
     );
     const newPost = new this.postModel({
       text: postText.response,
-      image:
-        'https://oaidalleapiprodscus.blob.core.windows.net/private/org-LORzMiTprZXrpqAURZlW3wGi/user-XC9g35RLbkFcklRoNpOivFLg/img-L91yynTa1Rf9oXz5nZEtoyzs.png?st=2024-06-18T11%3A13%3A16Z&se=2024-06-18T13%3A13%3A16Z&sp=r&sv=2023-11-03&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-06-17T19%3A26%3A47Z&ske=2024-06-18T19%3A26%3A47Z&sks=b&skv=2023-11-03&sig=uICqmTyGd48N8AXbnWhsvIdraMdGtrkEW2iG5hpuTp4%3D',
+      image: postImage,
       description,
     });
     const savedPost = await newPost.save();
@@ -115,9 +125,9 @@ export class AiService {
 
   public async generateAiImage(description: string) {
     try {
-      const imagePrompt = PromptTemplate.fromTemplate(`
-      Based on the following user ${description}, you need to generate a main realistic photo for the blog post. It must be a realistic photo only, no pictures. The photo should be a visual representation of the blog post's content and theme.
-        `);
+      const imagePrompt = PromptTemplate.fromTemplate(
+        `Generate a main realistic photo for the blog post, based on the following user description: "${description}". The image must be a realistic photo, not an illustration, drawing, or computer-generated graphic. Ensure the photo visually represents the blog post's content and theme.`,
+      );
       const prompt = await imagePrompt.format({ description });
       const image_url = await this.openAIImage.invoke(prompt);
       return image_url;
@@ -127,14 +137,16 @@ export class AiService {
   }
   public async generateTextByUserDescription(
     description: string,
+    articleLength: string,
     additionalDescription?: string,
   ) {
+    const headings = Number(articleLength);
     try {
       const prompt = ChatPromptTemplate.fromMessages([
         [
           'system',
-          `Based on the following description and ${additionalDescription}, write a professional blog post in HTML format with HTML text markup tags to insert in the <body> section.
-          The generated blog post should be modern, contain multiple paragraphs, lists, etc., and be well-styled in HTML format. Use inline CSS for a better appearance. Include references as a link in the Vancouver style at the end of the post. Add links from the internet that have similar posts or information. The post should look like a scientific article with 5 headings and be 2000 words in length.`,
+          `Based on the following description and ${additionalDescription}, write a professional blog for business Journal post in HTML format with HTML text markup tags to insert in the <body> section.
+          The generated blog post should be modern, contain multiple paragraphs, lists, etc., and be well-styled in HTML format. Use inline CSS for a better appearance.  The post should look like a scientific article.`,
         ],
         [
           'system',
@@ -148,42 +160,47 @@ export class AiService {
           'system',
           'Do not use body, html, or DOCTYPE html tags. Only use tags for markup.',
         ],
-        ['system', 'Use some inline CSS for better appearance.'],
-        [
-          'user',
-          `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. Use HTML tags and inline CSS for styling.`,
-        ],
+        ['system', 'Use inline CSS for better appearance.'],
+        new MessagesPlaceholder('history'),
+        ['human', '{input}'],
       ]);
 
-      const chain = prompt.pipe(this.openAI);
+      const runnable = prompt.pipe(this.openAI);
+      // Define your session history store.
+      const messageHistory = new ChatMessageHistory();
 
-      // Get the result for the first part
-      let result = await chain.invoke({
-        input: `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. Use HTML tags and inline CSS for styling.`,
+      const withHistory = new RunnableWithMessageHistory({
+        runnable,
+        getMessageHistory: (_sessionId: string) => messageHistory,
+        inputMessagesKey: 'input',
+        // This shows the runnable where to insert the history.
+        historyMessagesKey: 'history',
       });
-      let AIResponse = result.content.toString();
+      const config: RunnableConfig = { configurable: { sessionId: '1' } };
 
-      // Append the result for the next parts
-      result = await chain.invoke({
-        input: `Write the main sections (800-1000 words) as a continuation of the previous post on the topic: ${description}. Use the same HTML tags and inline CSS for styling.`,
-      });
-      AIResponse += result.content.toString();
+      let fullArticle = '';
 
-      result = await chain.invoke({
-        input: `Write the conclusion and final thoughts (400-500 words) for the previous post on the topic: ${description}. Write only the conclusion and final thoughts, do not repeat previous parts. Use the same HTML tags and inline CSS for styling.`,
-      });
-      AIResponse += result.content.toString();
+      async function invokeWithHistory(inputText: string) {
+        let output = await withHistory.invoke({ input: inputText }, config);
+        return output.content;
+      }
 
-      result = await chain.invoke({
-        input: `For previous post write a list (<ul><li><li/><ul/>) of references as links in that style -[1] - https://www.bankrate.com/real-estate/renting-an-apartment-pros-and-cons/.. Include links from the internet that have similar posts or information relevant to the previous content.`,
-      });
-      console.log('====================================');
-      console.log(result.content.toString());
-      console.log('====================================');
-      AIResponse += result.content.toString();
+      fullArticle += await invokeWithHistory(
+        `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. Use HTML tags and inline CSS for styling.`,
+      );
+
+      for (let i = 0; i <= headings - 2; i += 2) {
+        fullArticle += await invokeWithHistory(
+          `Do not repeat the previous part, just write the middle sections (800 -1000 words) with two headings as a continuation of the previous post on the topic: ${description}. Use the same HTML tags and inline CSS for styling.`,
+        );
+      }
+
+      fullArticle += await invokeWithHistory(
+        `Do not repeat the previous part, just write the references section as links a list (<ul><li><li/><ul/>) in the Vancouver style. Include links from the internet, from where you took an information and that have similar posts or information relevant to the previous content.`,
+      );
 
       return {
-        response: AIResponse,
+        response: fullArticle,
       };
     } catch (error: any) {
       throw new Error(error.message);

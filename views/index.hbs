@@ -58,6 +58,20 @@
             cols='40'
             rows='5'
           ></textarea>
+          <!-- Article Length Selector -->
+          <label class='form-info' for='articleLength'>Article length:</label>
+          <select
+            class='form-info'
+            id='articleLength'
+            name='articleLength'
+            required
+          >
+            <option value='4'>4-5 headings (500 - 1000 words)</option>
+            <option value='5'>5-6 headings (1000 - 2000 words)</option>
+            <option value='6'>6-7 headings (2000 - 3000 words)</option>
+            <option value='8'>7-8 headings (3000 - 4000 words)</option>
+            <option value='10'>9-10 headings (4000 - 5000 words)</option>
+          </select>
           <button class='button' type='submit'>Generate</button>
         </form>
         <div id='loader' class='loader'></div>
