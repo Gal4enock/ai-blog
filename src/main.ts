@@ -9,7 +9,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('AI Posts example')
-    .setDescription('The posts API description')
+    .setDescription(
+      'The posts API description. To use WebSocket, connect to `ws://localhost:3331` and use the "generateArticle" event with the following data structure: { description: string, articleLength: number, additionalDescription?: string }',
+    )
     .setVersion('1.0')
     .addTag('Ai blog')
     .build();

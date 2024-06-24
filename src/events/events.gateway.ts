@@ -9,7 +9,9 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AiService } from '../ai-blog/ai.service';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Ai blog')
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -28,6 +30,20 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('generateArticle')
+  @ApiOperation({ summary: 'Generate an article' })
+  @ApiBody({
+    description: 'Data needed to generate an article',
+    type: Object,
+    examples: {
+      example1: {
+        value: {
+          description: 'Your article description here',
+          articleLength: '5',
+          additionalDescription: 'Any additional description here',
+        },
+      },
+    },
+  })
   async handleGenerateArticle(
     @MessageBody()
     data: {
@@ -37,8 +53,6 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     },
     @ConnectedSocket() client: Socket,
   ) {
-    console.log('here');
-
     await this.aiService.generateTextByUserDescription(
       data.description,
       data.articleLength,

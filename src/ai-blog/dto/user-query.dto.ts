@@ -64,4 +64,32 @@ export class BasicCreatePostDto {
   @IsString()
   @IsNotEmpty()
   postText: string;
+
+  @ApiProperty({
+    description: 'Url to post image',
+    example: '"http://example.com/image.png"',
+  })
+  @IsString()
+  @IsNotEmpty()
+  imageUrl: string;
+}
+
+export class BasicGenerateImageDto {
+  @ApiProperty({
+    description: 'Text content of the post',
+    example: 'Online marketplace and hospitality services',
+  })
+  @IsNotEmpty()
+  @IsString()
+  description: string;
+}
+
+export class ImageCreatedDto {
+  @ApiProperty({
+    description: 'Text content of the post for creating a photo',
+    example: 'Online marketplace and hospitality services',
+  })
+  @IsNotEmpty()
+  @IsString()
+  image_url: string;
 }

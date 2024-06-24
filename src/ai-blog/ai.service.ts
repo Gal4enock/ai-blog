@@ -89,12 +89,11 @@ export class AiService {
   public async create(
     description: string,
     postText: string,
+    imageUrl: string,
   ): Promise<ResponsePostDto> {
-    const postImage = await this.generateAiImage(description);
-
     const newPost = new this.postModel({
       text: postText,
-      image: postImage,
+      image: imageUrl,
       description,
     });
     const savedPost = await newPost.save();
