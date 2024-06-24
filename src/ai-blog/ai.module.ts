@@ -10,5 +10,6 @@ import { Post, PostSchema } from './schemas/post.schema';
   ],
   providers: [AiService],
   controllers: [AiController],
+  exports: [AiService],
 })
 export class AiModule {}

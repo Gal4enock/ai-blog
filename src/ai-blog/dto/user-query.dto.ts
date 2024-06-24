@@ -26,7 +26,7 @@ export enum ArticleLength {
   ULTRA_LONG = '10',
 }
 
-export class BasicMessageDto {
+export class BasicMessageStremDto {
   @ApiProperty({
     description: 'Text content of the post',
     example: 'Online marketplace and hospitality services',
@@ -47,4 +47,21 @@ export class BasicMessageDto {
   })
   @IsOptional()
   articleLength: string;
+}
+
+export class BasicCreatePostDto {
+  @ApiProperty({
+    description: 'Text content of the post',
+    example: 'Online marketplace and hospitality services',
+  })
+  @IsNotEmpty()
+  @IsString()
+  description: string;
+  @ApiProperty({
+    description: 'Text to add some specific info to post',
+    example: 'Slogan: Belong anywhere with My Trevel Company.',
+  })
+  @IsString()
+  @IsNotEmpty()
+  postText: string;
 }

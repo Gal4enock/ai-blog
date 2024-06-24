@@ -39,7 +39,7 @@ import {
 import { AiService } from './ai.service';
 import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 import { ResponsePostDto, UpdatePostDto } from './dto/ai-post.dto';
-import { BasicMessageDto } from './dto/user-query.dto';
+import { BasicCreatePostDto } from './dto/user-query.dto';
 
 @ApiTags('Ai blog')
 @Controller()
@@ -48,7 +48,7 @@ export class AiController {
 
   @Post('generate-blogpost')
   @ApiOperation({ summary: 'Create AI post' })
-  @ApiBody({ type: BasicMessageDto })
+  @ApiBody({ type: BasicCreatePostDto })
   @ApiResponse({
     status: 201,
     description: 'The created record',
@@ -56,16 +56,12 @@ export class AiController {
   })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() blogPrompt: BasicMessageDto,
+    @Body() blogPrompt: BasicCreatePostDto,
   ): Promise<ResponsePostDto | null> {
     try {
-      const { userPrompt, articleLength, additionalPrompt } = blogPrompt;
+      const { description, postText } = blogPrompt;
 
-      const post = await this.aiService.create(
-        userPrompt,
-        articleLength,
-        additionalPrompt,
-      );
+      const post = await this.aiService.create(description, postText);
       return post;
     } catch (error: any) {
       console.error('Error in creating AI post:', error);

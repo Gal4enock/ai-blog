@@ -64,34 +64,6 @@ export class AppController {
     return {};
   }
 
-  @Post('generate')
-  @Render('index')
-  @ApiExcludeEndpoint()
-  async generateText(
-    @Body('description') description: string,
-    @Body('additional') additional: string,
-    @Body('articleLength') articleLength: string,
-  ) {
-    try {
-      const result = await this.aiController.create({
-        userPrompt: description,
-        additionalPrompt: additional,
-        articleLength,
-      });
-      if (!result) {
-        throw new Error('No generated post');
-      }
-      return {
-        htmlContent: result.text,
-        postId: result._id,
-        image: result.image,
-      };
-    } catch (error: any) {
-      console.error('Error in generating text:', error);
-      return { htmlContent: '', postId: '', image: '' };
-    }
-  }
-
   @Post('save-content')
   @Render('index')
   @ApiExcludeEndpoint()
