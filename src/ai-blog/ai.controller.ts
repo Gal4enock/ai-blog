@@ -39,37 +39,60 @@ import {
 import { AiService } from './ai.service';
 import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 import { ResponsePostDto, UpdatePostDto } from './dto/ai-post.dto';
-import { BasicMessageDto } from './dto/user-query.dto';
+import {
+  BasicCreatePostDto,
+  BasicGenerateImageDto,
+  ImageCreatedDto,
+} from './dto/user-query.dto';
 
 @ApiTags('Ai blog')
 @Controller()
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
-  @Post('generate-blogpost')
-  @ApiOperation({ summary: 'Create AI post' })
-  @ApiBody({ type: BasicMessageDto })
+  @Post('save-blogpost')
+  @ApiOperation({ summary: 'Create AI post in data-base' })
+  @ApiBody({ type: BasicCreatePostDto })
   @ApiResponse({
     status: 201,
     description: 'The created record',
     type: ResponsePostDto,
   })
   @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Body() blogPrompt: BasicMessageDto,
+  async save(
+    @Body() blogPrompt: BasicCreatePostDto,
   ): Promise<ResponsePostDto | null> {
     try {
-      const { userPrompt, articleLength, additionalPrompt } = blogPrompt;
+      const { description, postText, imageUrl } = blogPrompt;
 
-      const post = await this.aiService.create(
-        userPrompt,
-        articleLength,
-        additionalPrompt,
-      );
+      const post = await this.aiService.create(description, postText, imageUrl);
       return post;
     } catch (error: any) {
       console.error('Error in creating AI post:', error);
       throw new Error('Failed to create AI post');
+    }
+  }
+
+  @Post('generate-image')
+  @ApiOperation({ summary: 'Create AI post photo' })
+  @ApiBody({ type: BasicGenerateImageDto })
+  @ApiResponse({
+    status: 201,
+    description: 'The image created',
+    type: ImageCreatedDto,
+  })
+  @HttpCode(HttpStatus.CREATED)
+  async generateImage(
+    @Body() blogPrompt: BasicGenerateImageDto,
+  ): Promise<string | null> {
+    try {
+      const { description } = blogPrompt;
+
+      const image_url = await this.aiService.generateAiImage(description);
+      return image_url;
+    } catch (error: any) {
+      console.error('Error in creating AI post photo:', error);
+      throw new Error('Failed to create AI post photo');
     }
   }
 

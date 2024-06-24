@@ -50,6 +50,7 @@ import {
   RunnableWithMessageHistory,
 } from '@langchain/core/runnables';
 import { ChatMessageHistory } from '@langchain/community/stores/message/in_memory';
+import { Socket } from 'socket.io';
 
 import { ResponsePostDto, UpdatePostDto } from './dto/ai-post.dto';
 import { Post, PostDocument } from './schemas/post.schema';
@@ -87,18 +88,12 @@ export class AiService {
 
   public async create(
     description: string,
-    articleLength: string,
-    additionalDescription?: string,
+    postText: string,
+    imageUrl: string,
   ): Promise<ResponsePostDto> {
-    const postImage = await this.generateAiImage(description);
-    const postText = await this.generateTextByUserDescription(
-      description,
-      articleLength,
-      additionalDescription,
-    );
     const newPost = new this.postModel({
-      text: postText.response,
-      image: postImage,
+      text: postText,
+      image: imageUrl,
       description,
     });
     const savedPost = await newPost.save();
@@ -126,7 +121,7 @@ export class AiService {
   public async generateAiImage(description: string) {
     try {
       const imagePrompt = PromptTemplate.fromTemplate(
-        `Generate a main realistic photo for the blog post, based on the following user description: "${description}". The image must be a realistic photo, not an illustration, drawing, or computer-generated graphic. Ensure the photo visually represents the blog post's content and theme.`,
+        `Generate a main real photo for the blog post, based on the following user description: "${description}". The image must be a real photo, not an illustration, drawing, or computer-generated graphic. Ensure the photo visually represents the blog post's content and theme.`,
       );
       const prompt = await imagePrompt.format({ description });
       const image_url = await this.openAIImage.invoke(prompt);
@@ -138,6 +133,7 @@ export class AiService {
   public async generateTextByUserDescription(
     description: string,
     articleLength: string,
+    client: Socket,
     additionalDescription?: string,
   ) {
     const headings = Number(articleLength);
@@ -177,28 +173,29 @@ export class AiService {
         historyMessagesKey: 'history',
       });
       const config: RunnableConfig = { configurable: { sessionId: '1' } };
-
       let fullArticle = '';
 
-      async function invokeWithHistory(inputText: string) {
-        let output = await withHistory.invoke({ input: inputText }, config);
-        return output.content;
-      }
-
-      fullArticle += await invokeWithHistory(
+      const streamChunks = async (inputText: string) => {
+        const stream = await withHistory.stream({ input: inputText }, config);
+        for await (const chunk of stream) {
+          client.emit('articlePartGenerated', chunk.content);
+          fullArticle += chunk.content;
+        }
+      };
+      await streamChunks(
         `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. Use HTML tags and inline CSS for styling.`,
       );
 
       for (let i = 0; i <= headings - 2; i += 2) {
-        fullArticle += await invokeWithHistory(
-          `Do not repeat the previous part, just write the middle sections (800 -1000 words) with two headings as a continuation of the previous post on the topic: ${description}. Use the same HTML tags and inline CSS for styling.`,
-        );
+        for (let i = 0; i <= headings - 2; i += 2) {
+          await streamChunks(
+            `Do not repeat the previous part, just write the middle sections (800 -1000 words) with two headings as a continuation of the previous post on the topic: ${description}. Use the same HTML tags and inline CSS for styling.`,
+          );
+        }
       }
-
-      fullArticle += await invokeWithHistory(
+      await streamChunks(
         `Do not repeat the previous part, just write the references section as links a list (<ul><li><li/><ul/>) in the Vancouver style. Include links from the internet, from where you took an information and that have similar posts or information relevant to the previous content.`,
       );
-
       return {
         response: fullArticle,
       };

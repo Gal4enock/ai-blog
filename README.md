@@ -47,44 +47,122 @@ $ npm run start:prod
 
 ## Instructions for Use
 
-1. **Open the Application:**
+1. **Generate Blog Post via WebSocket:**
 
-   - Start the application by running one of the following commands: `npm run start`, `npm run start:dev`, or `npm run start:prod`.
-   - Open your web browser and navigate to [http://localhost:3331](http://localhost:3331).
+   - Connect to the WebSocket server. You can use a WebSocket client library like `socket.io-client`.
+   - Emit a request to generate an article:
 
-2. **Generate Blog Post:**
+   ```javascript
+   const socket = io('http://localhost:3331');
+   socket.emit('generateArticle', {
+   description: 'Your article description here',
+   articleLength: 5,
+   });.
 
-   - On the main page, you will see inputs fields labeled "Description" and "Additional information".
-   - Enter the main information or topic for your blog post in the "Description" input field.
-   - If you need to provide specific or additional information, please add it to the "Additional Information" field. To achieve better results, include a name for this information. For example:
-
-   ```bash
-    "Slogan: Belong anywhere with My Travel Company."
    ```
 
-   - Choose an appropriate post size from the dropdown menu
-   - Click the "Generate" button.
-   - The generated blog post will be displayed below the form.
+2. **Listen for the stream of article parts:**
 
-3. **Edit Blog Post:**
+```javascript
+socket.on('articlePartGenerated', (chunk) => {
+  // Append the received chunk to your content area
+  console.log(ckunk); // part of post (few symbols)
+});
+```
 
-   - After generating the blog post, click the "Edit" button to open the editor.
-   - You will see a "Regenerate Image" button — click it if you want another picture.
-   - Use the editor to make any necessary changes to the blog post.
-   - Click the "Save" button to save your changes.
+3. **Generate Image Endpoint:**
 
-4. **View Saved Post:**
+#### Endpoint: `POST /generate-image`
 
-   - After saving, the updated blog post will be displayed on the page.
+This endpoint generates an AI-created image based on the provided description.
+
+- **Operation**: `generateImage`
+- **Description**: Create AI post photo
+- **Request Body**:
+  - **Type**: `BasicGenerateImageDto`
+  - **Example**:
+    ```json
+    {
+      "description": "A beautiful sunset over the mountains"
+    }
+    ```
+- **Responses**:
+  - **201**: The image created
+    - **Type**: `ImageCreatedDto`
+    - **Example**:
+      ```json
+      {
+        "url": "http://example.com/image.png"
+      }
+      ```
+
+4. **Save Blog Post Endpoint:**
+
+#### Endpoint: `POST /save-blogpost`
+
+This endpoint saves the AI-generated image and text to the database.
+
+- **Operation**: `save`
+- **Description**: Create AI post in database
+- **Request Body**:
+  - **Type**: `BasicCreatePostDto`
+  - **Example**:
+    ```json
+    {
+      "description": "A beautiful sunset over the mountains",
+      "postText": "The sun set in a blaze of orange and red...",
+      "imageUrl": "http://example.com/image.png"
+    }
+    ```
+- **Responses**:
+  - **201**: The created record
+    - **Type**: `ResponsePostDto`
+    - **Example**:
+      ```json
+      {
+        "id": "12345",
+        "description": "A beautiful sunset over the mountains",
+        "postText": "The sun set in a blaze of orange and red...",
+        "imageUrl": "http://example.com/image.png",
+        "createdAt": "2024-06-24T12:34:56Z"
+      }
+      ```
+
+5. **Edit Blog Post:**
+
+   - After receiving the complete blog post, you can implement an editor on the client side to make necessary changes.
+   - After editing, you can send the updated post to your backend for saving.
+
+#### Endpoint: `PUT /modify-blogpost`
+
+This endpoint updates an existing blog post.
+
+- **Operation**: `updatePost`
+- **Description**: Update post
+- **Request Body**:
+  - **Type**: `UpdatePostDto`
+  - **Example**:
+    ```json
+    {
+      "id": "12345",
+      "description": "An updated description",
+      "postText": "Updated text of the blog post..."
+    }
+    ```
+- **Responses**:
+  - **200**: The updated record
+    - **Type**: `ResponsePostDto`
+    - **Example**:
+      ```json
+      {
+        "id": "12345",
+        "description": "An updated description",
+        "postText": "Updated text of the blog post...",
+        "imageUrl": "http://example.com/image.png",
+        "updatedAt": "2024-06-24T12:34:56Z"
+      }
+      ```
 
 ## Swagger documents for Backend part
 
 - Open your web browser and navigate to [http://localhost:3331/api](http://localhost:3331/api).
-
-## Video
-
-[Video Presentation](https://www.awesomescreenshot.com/video/28711236?key=5b5efa3a95b0a8da16f2675f6f101cde) Click to open a video presentation
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
