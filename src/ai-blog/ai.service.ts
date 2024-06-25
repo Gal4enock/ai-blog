@@ -121,7 +121,7 @@ export class AiService {
   public async generateAiImage(description: string) {
     try {
       const imagePrompt = PromptTemplate.fromTemplate(
-        `Generate a main real photo for the blog post, based on the following user description: "${description}". The image must be a real photo, not an illustration, drawing, or computer-generated graphic. Ensure the photo visually represents the blog post's content and theme.`,
+        `Generate a main real photo for the blog post in business journal, based on the following user description: "${description}". The photo schould looks like it was photographed with a digital camera. Ensure the photo visually represents the blog post's content and theme.`,
       );
       const prompt = await imagePrompt.format({ description });
       const image_url = await this.openAIImage.invoke(prompt);
@@ -134,14 +134,41 @@ export class AiService {
     description: string,
     articleLength: string,
     client: Socket,
-    additionalDescription?: string,
+    layoutStructure: string,
+    callToAction: string,
+    headings?: { introduction: string; mainBody: string; conclusion: string },
+    subheadings?: string[],
+    link?: string,
   ) {
-    const headings = Number(articleLength);
+    const postHeadings = Number(articleLength);
     try {
+      const blogFromLink = link
+        ? `include the information from this link - ${link}`
+        : '';
+      const headingIntroduction =
+        headings && headings.introduction
+          ? `Use this heading in introduction - ${headings.introduction}.`
+          : '';
+      const headingBody =
+        headings && headings.introduction
+          ? `Use this heading in middle sections - ${headings.mainBody}.`
+          : '';
+      const headingConclusion =
+        headings && headings.introduction
+          ? `Use this heading in conclusion sections - ${headings.conclusion}.`
+          : '';
+
+      let postSubheadingsPhrase = '';
+      if (subheadings && subheadings.length) {
+        postSubheadingsPhrase = subheadings.join('; ');
+      }
+      const postSubheadings = postSubheadingsPhrase.length
+        ? `Use this subheadings in this sections - ${postSubheadingsPhrase}.`
+        : '';
       const prompt = ChatPromptTemplate.fromMessages([
         [
           'system',
-          `Based on the following description and ${additionalDescription}, write a professional blog for business Journal post in HTML format with HTML text markup tags to insert in the <body> section.
+          ` Based on the following description, write a professional blog for business Journal post in HTML format with HTML text markup tags to insert in the <body> section. Include in text Call To Action phrase ${callToAction}. ${blogFromLink}
           The generated blog post should be modern, contain multiple paragraphs, lists, etc., and be well-styled in HTML format. Use inline CSS for a better appearance.  The post should look like a scientific article.`,
         ],
         [
@@ -156,6 +183,7 @@ export class AiService {
           'system',
           'Do not use body, html, or DOCTYPE html tags. Only use tags for markup.',
         ],
+        ['system', `Layout structure of blog schould be ${layoutStructure}`],
         ['system', 'Use inline CSS for better appearance.'],
         new MessagesPlaceholder('history'),
         ['human', '{input}'],
@@ -183,16 +211,18 @@ export class AiService {
         }
       };
       await streamChunks(
-        `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. Use HTML tags and inline CSS for styling.`,
+        `Write the introduction and the first section (400-500 words) for a four-page magazine article on the topic: ${description}. ${headingIntroduction} ${blogFromLink}. Use HTML tags and inline CSS for styling.`,
       );
 
-      for (let i = 0; i <= headings - 2; i += 2) {
-        for (let i = 0; i <= headings - 2; i += 2) {
-          await streamChunks(
-            `Do not repeat the previous part, just write the middle sections (800 -1000 words) with two headings as a continuation of the previous post on the topic: ${description}. Use the same HTML tags and inline CSS for styling.`,
-          );
-        }
+      for (let i = 0; i <= postHeadings - 2; i += 2) {
+        await streamChunks(
+          `Do not repeat the previous part, just write the middle sections (800 -1000 words) with two headings as a continuation of the previous post on the topic: ${description}. ${i === 0 ? postSubheadings : ''} ${headingBody} ${blogFromLink} Use the same HTML tags and inline CSS for styling.`,
+        );
       }
+
+      await streamChunks(
+        `Do not repeat the previous part, just write the conclusion section as links (800 -1000 words) as a continuation of the previous post on the topic: ${description}.  ${blogFromLink} ${headingConclusion}`,
+      );
       await streamChunks(
         `Do not repeat the previous part, just write the references section as links a list (<ul><li><li/><ul/>) in the Vancouver style. Include links from the internet, from where you took an information and that have similar posts or information relevant to the previous content.`,
       );

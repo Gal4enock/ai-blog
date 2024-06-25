@@ -57,6 +57,15 @@ $ npm run start:prod
    socket.emit('generateArticle', {
    description: 'Your article description here',
    articleLength: 5,
+   layoutStructure: 'Your layout structure here',
+   callToAction: 'Your call to action here',
+   headings: {
+    introduction: 'Introduction text here',
+    mainBody: 'Main body text here',
+    conclusion: 'Conclusion text here',
+   }, // optional
+   subheadings: ['Subheading 1', 'Subheading 2'], // optional
+   link: 'http://example.com', // optional
    });.
 
    ```

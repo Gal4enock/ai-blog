@@ -32,6 +32,7 @@ export class CreatePostDto {
   })
   @IsString()
   readonly image?: string;
+
   @ApiProperty({
     description: 'Text content of the post',
     example: 'This is a sample post.',
