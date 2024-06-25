@@ -47,35 +47,83 @@ $ npm run start:prod
 
 ## Instructions for Use
 
+**Information on Uploading Files for AI**
+
+When you need to upload files from which the AI will take information, you must upload each file to the `@Controller('upload')`. The file names can be:
+
+- `infoContent` (field "Upload own content" according to the design mockup)
+- `sampleText` (field "Sample text" according to the design mockup)
+- `sampleKeywords` (field "Sample placeholder Keyword PDF.PDF" according to the design)
+
+#### Endpoint: POST /upload
+
+This endpoint handles file uploads, specifically PDF files.
+
+- **Operation**: uploadFile
+- **Description**: Upload files
+- **Request Body**:
+
+  - **Type**: object
+  - **Properties**:
+    - `infoContent`: PDF file containing information content.
+    - `sampleText`: PDF file with sample text.
+    - `sampleKeywords`: PDF file containing sample keywords.
+
+- **Example Request**:
+
+```json
+{
+  "infoContent": (PDF file),
+  "sampleText": (PDF file),
+  "sampleKeywords": (PDF file)
+}
+```
+
+- **Responses**:
+  - **200**: File uploaded successfully.
+    - **Type**: `object`
+    - **Example**:
+      ```json
+      {
+        "message": "File uploaded successfully"
+      }
+      ```
+
 1. **Generate Blog Post via WebSocket:**
 
-   - Connect to the WebSocket server. You can use a WebSocket client library like `socket.io-client`.
-   - Emit a request to generate an article:
+When you need to upload files from which the AI will take information, you must upload each file to the `@Controller('upload')`. The file names can be:
 
-   ```javascript
-   const socket = io('http://localhost:3331');
-   socket.emit('generateArticle', {
-   description: 'Your article description here',
-   articleLength: 5,
-   layoutStructure: 'Your layout structure here',
-   callToAction: 'Your call to action here',
-   toneOfVoice: string,
-   languageComplexity: "Simple",
-   vocabularyLevel: "Beginner",
-   formalityLevel: "Casual",
-   tempOfVoice: "Passive",
-   keywords:   ["Keyword Written 1", "Keyword Written 2"],
-   sampleText: "sample of the blog post", // optional
-   headings: {
-    introduction: 'Introduction heading here',
-    mainBody: 'Main body heading here',
-    conclusion: 'Conclusion heading here',
-   }, // optional
-   subheadings: ['Subheading 1', 'Subheading 2'], // optional
-   link: 'http://example.com', // optional
-   });.
+- `infoContent` (field "Upload own content" according to the design mockup)
+- `sampleText` (field "Sample text" according to the design mockup)
+- `sampleKeywords` (field "Sample placeholder Keyword PDF.PDF" according to the design)
 
-   ```
+  - Connect to the WebSocket server. You can use a WebSocket client library like `socket.io-client`.
+  - Emit a request to generate an article:
+
+  ```javascript
+  const socket = io('http://localhost:3331');
+  socket.emit('generateArticle', {
+  description: 'Your article description here',
+  articleLength: 5,
+  layoutStructure: 'Your layout structure here',
+  callToAction: 'Your call to action here',
+  toneOfVoice: string,
+  languageComplexity: "Simple",
+  vocabularyLevel: "Beginner",
+  formalityLevel: "Casual",
+  tempOfVoice: "Passive",
+  keywords:   ["Keyword Written 1", "Keyword Written 2"],
+  sampleText: "sample of the blog post", // optional
+  headings: {
+   introduction: 'Introduction heading here',
+   mainBody: 'Main body heading here',
+   conclusion: 'Conclusion heading here',
+  }, // optional
+  subheadings: ['Subheading 1', 'Subheading 2'], // optional
+  link: 'http://example.com', // optional
+  });.
+
+  ```
 
 2. **Listen for the stream of article parts:**
 
