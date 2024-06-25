@@ -29,7 +29,7 @@ Welcome to our application for creating and editing text and images using AI. Ge
 ## Installation
 
 ```bash
-$ npm install
+$ npm install --force
 ```
 
 ## Running the app
