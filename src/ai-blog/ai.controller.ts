@@ -35,20 +35,84 @@ import {
   HttpStatus,
   Post,
   Put,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AiService } from './ai.service';
-import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBody,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { ResponsePostDto, UpdatePostDto } from './dto/ai-post.dto';
 import {
   BasicCreatePostDto,
   BasicGenerateImageDto,
   ImageCreatedDto,
 } from './dto/user-query.dto';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @ApiTags('Ai blog')
 @Controller()
 export class AiController {
   constructor(private readonly aiService: AiService) {}
+
+  @Post('upload')
+  @ApiOperation({ summary: 'Upload files' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Upload PDF files',
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        infoContent: {
+          type: 'string',
+          format: 'binary',
+        },
+        sampleText: {
+          type: 'string',
+          format: 'binary',
+        },
+        sampleKeywords: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'infoContent', maxCount: 1 },
+        { name: 'sampleText', maxCount: 1 },
+        { name: 'sampleKeywords', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads',
+          filename: (req, file, cb) => {
+            cb(null, file.fieldname + '.pdf');
+          },
+        }),
+      },
+    ),
+  )
+  async uploadFile(
+    @UploadedFiles()
+    files: {
+      infoContent?: Express.Multer.File[];
+      sampleText?: Express.Multer.File[];
+      sampleKeywords?: Express.Multer.File[];
+    },
+  ) {
+    return {
+      message: 'File uploaded successfully',
+    };
+  }
 
   @Post('save-blogpost')
   @ApiOperation({ summary: 'Create AI post in data-base' })
