@@ -26,27 +26,56 @@ export enum ArticleLength {
   ULTRA_LONG = '10',
 }
 
-export class BasicMessageStremDto {
+export class BasicMessageStreamDto {
   @ApiProperty({
     description: 'Text content of the post',
     example: 'Online marketplace and hospitality services',
   })
   @IsNotEmpty()
   @IsString()
-  userPrompt: string;
+  description: string;
+
   @ApiProperty({
     description: 'Text to add some specific info to post',
-    example: 'Slogan: Belong anywhere with My Trevel Company.',
+    example: 'Slogan: Belong anywhere with My Travel Company.',
   })
   @IsString()
   @IsOptional()
-  additionalPrompt: string;
+  callToAction: string;
 
   @ApiProperty({
     enum: ArticleLength,
   })
   @IsOptional()
   articleLength: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  layoutStructure: string;
+
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      introduction: { type: 'string' },
+      mainBody: { type: 'string' },
+      conclusion: { type: 'string' },
+    },
+  })
+  @IsOptional()
+  headings?: { introduction: string; mainBody: string; conclusion: string };
+
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'string' },
+  })
+  @IsOptional()
+  subheadings?: string[];
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  link?: string;
 }
 
 export class BasicCreatePostDto {

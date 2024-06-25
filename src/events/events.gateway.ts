@@ -31,25 +31,24 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('generateArticle')
   @ApiOperation({ summary: 'Generate an article' })
-  @ApiBody({
-    description: 'Data needed to generate an article',
-    type: Object,
-    examples: {
-      example1: {
-        value: {
-          description: 'Your article description here',
-          articleLength: '5',
-          additionalDescription: 'Any additional description here',
-        },
-      },
-    },
-  })
   async handleGenerateArticle(
     @MessageBody()
     data: {
       description: string;
       articleLength: string;
-      additionalDescription: string;
+      client: Socket;
+      layoutStructure: string;
+      callToAction: string;
+      toneOfVoice: string;
+      languageComplexity: string;
+      vocabularyLevel: string;
+      formalityLevel: string;
+      tempOfVoice: string;
+      keywords: string[];
+      sampleText?: string;
+      headings?: { introduction: string; mainBody: string; conclusion: string };
+      subheadings?: string[];
+      link?: string;
     },
     @ConnectedSocket() client: Socket,
   ) {
@@ -57,7 +56,18 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.description,
       data.articleLength,
       client,
-      data.additionalDescription,
+      data.layoutStructure,
+      data.callToAction,
+      data.toneOfVoice,
+      data.languageComplexity,
+      data.vocabularyLevel,
+      data.formalityLevel,
+      data.tempOfVoice,
+      data.keywords,
+      data.sampleText,
+      data.headings,
+      data.subheadings,
+      data.link,
     );
   }
 }
