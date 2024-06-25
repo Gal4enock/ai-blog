@@ -59,10 +59,17 @@ $ npm run start:prod
    articleLength: 5,
    layoutStructure: 'Your layout structure here',
    callToAction: 'Your call to action here',
+   toneOfVoice: string,
+   languageComplexity: "Simple",
+   vocabularyLevel: "Beginner",
+   formalityLevel: "Casual",
+   tempOfVoice: "Passive",
+   keywords:   ["Keyword Written 1", "Keyword Written 2"],
+   sampleText: "sample of the blog post", // optional
    headings: {
-    introduction: 'Introduction text here',
-    mainBody: 'Main body text here',
-    conclusion: 'Conclusion text here',
+    introduction: 'Introduction heading here',
+    mainBody: 'Main body heading here',
+    conclusion: 'Conclusion heading here',
    }, // optional
    subheadings: ['Subheading 1', 'Subheading 2'], // optional
    link: 'http://example.com', // optional

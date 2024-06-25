@@ -136,6 +136,13 @@ export class AiService {
     client: Socket,
     layoutStructure: string,
     callToAction: string,
+    toneOfVoice: string,
+    languageComplexity: string,
+    vocabularyLevel: string,
+    formalityLevel: string,
+    tempOfVoice: string,
+    keywords: string[],
+    sampleText?: string,
     headings?: { introduction: string; mainBody: string; conclusion: string },
     subheadings?: string[],
     link?: string,
@@ -157,7 +164,9 @@ export class AiService {
         headings && headings.introduction
           ? `Use this heading in conclusion sections - ${headings.conclusion}.`
           : '';
-
+      const postSample = `use this text as a ${sampleText} for creating a post.`
+        ? sampleText
+        : '';
       let postSubheadingsPhrase = '';
       if (subheadings && subheadings.length) {
         postSubheadingsPhrase = subheadings.join('; ');
@@ -168,12 +177,12 @@ export class AiService {
       const prompt = ChatPromptTemplate.fromMessages([
         [
           'system',
-          ` Based on the following description, write a professional blog for business Journal post in HTML format with HTML text markup tags to insert in the <body> section. Include in text Call To Action phrase ${callToAction}. ${blogFromLink}
-          The generated blog post should be modern, contain multiple paragraphs, lists, etc., and be well-styled in HTML format. Use inline CSS for a better appearance.  The post should look like a scientific article.`,
+          ` Based on the following description, keywords - ${keywords}  write a professional blog for business Journal post in HTML format with HTML text markup tags to insert in the <body> section. Include in text Call To Action phrase ${callToAction}. ${blogFromLink}
+          The generated blog post should be modern, contain multiple paragraphs, lists, etc., and be well-styled in HTML format. Use inline CSS for a better appearance.  The post should look like a scientific article.  ${postSample}`,
         ],
         [
           'system',
-          'The post should be at least 2000 words in length in HTML format without head tags.All Blog text should be black. h2 text - "font-weight: bold". Blog main text should have "font-size: 18px; color: black; line-height: 1.6; font-family: Arial, sans-serif;"',
+          `The post should have such characteristics: tone Of voice - ${toneOfVoice}, language complexity - ${languageComplexity}, vocabulary level - ${vocabularyLevel}, formality level - ${formalityLevel}, temp Of voice (Passive or Active Voice) - ${tempOfVoice}.All Blog text should be black. h2 text - "font-weight: bold". Blog main text should have "font-size: 18px; color: black; line-height: 1.6; font-family: Arial, sans-serif;"`,
         ],
         [
           'system',

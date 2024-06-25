@@ -36,8 +36,16 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     data: {
       description: string;
       articleLength: string;
+      client: Socket;
       layoutStructure: string;
       callToAction: string;
+      toneOfVoice: string;
+      languageComplexity: string;
+      vocabularyLevel: string;
+      formalityLevel: string;
+      tempOfVoice: string;
+      keywords: string[];
+      sampleText?: string;
       headings?: { introduction: string; mainBody: string; conclusion: string };
       subheadings?: string[];
       link?: string;
@@ -50,6 +58,13 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client,
       data.layoutStructure,
       data.callToAction,
+      data.toneOfVoice,
+      data.languageComplexity,
+      data.vocabularyLevel,
+      data.formalityLevel,
+      data.tempOfVoice,
+      data.keywords,
+      data.sampleText,
       data.headings,
       data.subheadings,
       data.link,
